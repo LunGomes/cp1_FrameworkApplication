@@ -4,8 +4,6 @@ from typing import Optional
 
 app = FastAPI()
 
-
-
 # base simulada
 filmes = [
     {"id": 1, "titulo": "Toy Story", "genero": "Comédia", "ano": 1995,
@@ -52,10 +50,30 @@ filmes = [
         "img": "https://br.web.img3.acsta.net/pictures/13/12/02/20/59/515779.jpg"},
 ]
 
-# -------------------------
-# HOME + LISTAGEM
-# -------------------------
+@app.post("/cadastrar")
+def cadastrar(
+    titulo: str = Form(...),
+    genero: str = Form(...),
+    ano: int = Form(...),
+    img: str = Form(...)
+):
+    novo = {
+        "id": len(filmes) + 1,
+        "titulo": titulo,
+        "genero": genero,
+        "ano": ano,
+        "img": img
+    }
 
+    filmes.append(novo)
+
+@app.get("/filme/{filme_id}")
+def buscar_filme(filme_id: int):
+    for filme in filmes:
+        if filme["id"] == filme_id:
+            return filme
+    
+    return {"erro": "Filme não listado"} 
 
 @app.get("/", response_class=HTMLResponse)
 def home(
@@ -101,7 +119,7 @@ def home(
     elif ordem == "desc":
         lista_filmes = sorted(lista_filmes, key=lambda f: f["ano"], reverse=True)
 
-    # FIM FILTROS
+    # FIM DOS FILTROS
 
     if not lista_filmes:
         html_filmes = """
@@ -123,18 +141,6 @@ def home(
             </div>
             """
 
-    for filme in lista_filmes:
-        html_filmes += f"""
-        <div style="background:#F06C01;border-radius:10px;width:100%; max-width:200px;;overflow:hidden;color:#fff">
-            <img src="{filme['img']}" style="width:100%; height:300px; object-fit:cover;">
-            <div style="padding:10px;">
-                <h3 style="margin:0; font-size:16px;">{filme['titulo']}</h3>
-                <p style="margin:5px 0;">🎭 {filme['genero']}</p>
-                <p style="margin:0;">📅 {filme['ano']}</p>
-            </div>
-        </div>
-        """
-
     return f"""
 <html>
 <head>
@@ -149,12 +155,10 @@ def home(
         <!-- HEADER -->
         <div style="background:#F06C01; padding:20px; border-radius:10px; margin-bottom:20px; max-width:100%;">
 
-            <!-- LINHA 1 -->
             <div style="margin-bottom:20px;">
                 <h1 style="color:#A1071F; margin:0;text-align:center">🎬 Kids Flix</h1>
             </div>
 
-            <!-- LINHA 2 -->
             <div style="display:flex; gap:20px; flex-wrap:wrap;">
 
                 <!-- ESQUERDA: BUSCA -->
@@ -163,7 +167,6 @@ def home(
 
     <form method="get" style="display:flex; flex-direction:column; gap:10px;">
         
-        <!-- LINHA DE CIMA -->
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <input name="q" placeholder="Buscar filme..."
                 style="padding:10px; border-radius:5px; border:none; flex:1">
@@ -191,7 +194,6 @@ def home(
             </select>
         </div>
 
-        <!-- LINHA DE BAIXO -->
         <div style="display:flex; gap:10px; align-items:center;">
             <button style="background:#01F065; padding:10px; border:none; border-radius:5px; flex:1">
                 Filtrar
@@ -278,38 +280,3 @@ def home(
 </body>
 </html>
 """
-
-
-# -------------------------
-# CADASTRO
-# -------------------------
-@app.post("/cadastrar")
-def cadastrar(
-    titulo: str = Form(...),
-    genero: str = Form(...),
-    ano: int = Form(...),
-    img: str = Form(...)
-):
-    novo = {
-        "id": len(filmes) + 1,
-        "titulo": titulo,
-        "genero": genero,
-        "ano": ano,
-        "img": img
-    }
-
-    filmes.append(novo)
-
-    return {"mensagem": "Filme cadastrado com sucesso"}
-
-
-# -------------------------
-# BUSCAR POR ID
-# -------------------------
-@app.get("/filme/{filme_id}")
-def buscar_filme(filme_id: int):
-    for filme in filmes:
-        if filme["id"] == filme_id:
-            return filme
-
-    return {"erro": "Filme não encontrado"}
